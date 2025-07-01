@@ -47,6 +47,15 @@ class _ListItemsState extends State<ListItems> {
             return ItemCard(workoutFood: workoutfoods[index]);
           },
         ),
+        ),
+        floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          Navigator.pushNamed(context, '/add');
+
+    },
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.black,
+    child: Icon(Icons.add)
       ),
     );
   }
