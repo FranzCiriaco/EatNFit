@@ -1,10 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+// Dummy calorie data for a week
+const List<double> weeklyCalories = [300, 450, 200, 500, 400, 350, 600];
+
 class ProgressPage extends StatelessWidget {
   const ProgressPage({super.key});
-
-  final List<double> weeklyCalories = const [300, 450, 200, 500, 400, 350, 600];
 
   @override
   Widget build(BuildContext context) {
@@ -31,45 +32,59 @@ class ProgressPage extends StatelessWidget {
             Text(
               "Your Weekly Stats",
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueGrey.shade900,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey.shade900,
+              ),
             ),
             const SizedBox(height: 20),
 
             // Chart card
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     const Text(
                       "Calories Burned This Week",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
-                    const SizedBox(height: 200, child: _BarChart()),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: days.map((d) => Text(d)).toList(),
-                    )
+                    const SizedBox(height: 16),
+                    SizedBox(height: 220, child: _BarChart(values: weeklyCalories)),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Stats Cards
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                _StatCard(title: "Steps", value: "8,450", icon: Icons.directions_walk, color: Colors.green),
-                _StatCard(title: "Goal", value: "Lose Weight", icon: Icons.flag, color: Colors.orange),
-                _StatCard(title: "Weight", value: "68 kg", icon: Icons.monitor_weight, color: Colors.blue),
+                _StatCard(
+                    title: "Steps",
+                    value: "8,450",
+                    icon: Icons.directions_walk,
+                    color: Colors.green),
+                SizedBox(width: 10),
+                _StatCard(
+                    title: "Goal",
+                    value: "Lose Weight",
+                    icon: Icons.flag,
+                    color: Colors.orange),
+                SizedBox(width: 10),
+                _StatCard(
+                    title: "Weight",
+                    value: "68 kg",
+                    icon: Icons.monitor_weight,
+                    color: Colors.blue),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Date note
             Center(
@@ -77,7 +92,7 @@ class ProgressPage extends StatelessWidget {
                 "Today • ${days[today.weekday - 1]}, ${today.month}/${today.day}/${today.year}",
                 style: TextStyle(color: Colors.grey.shade600),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -87,33 +102,80 @@ class ProgressPage extends StatelessWidget {
 
 // Bar Chart Widget
 class _BarChart extends StatelessWidget {
-  const _BarChart();
+  final List<double> values;
 
-  final List<double> values = const [300, 450, 200, 500, 400, 350, 600];
+  const _BarChart({required this.values});
 
   @override
   Widget build(BuildContext context) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
     return BarChart(
       BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: (values.reduce((a, b) => a > b ? a : b)) + 100,
+        minY: 0,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            tooltipBgColor: Colors.blueAccent,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                '${rod.toY.toInt()} kcal',
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, _) {
+                final int index = value.toInt();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    days[index],
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                );
+              },
+              reservedSize: 32,
+            ),
+          ),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        gridData: FlGridData(show: false),
         borderData: FlBorderData(show: false),
         barGroups: values.asMap().entries.map((entry) {
           final index = entry.key;
           final value = entry.value;
+
           return BarChartGroupData(
             x: index,
             barRods: [
               BarChartRodData(
                 toY: value,
-                color: Colors.blue.shade600,
-                width: 16,
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade400, Colors.blue.shade800],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                width: 20,
                 borderRadius: BorderRadius.circular(8),
               ),
             ],
+            showingTooltipIndicators: [0],
           );
         }).toList(),
-        titlesData: FlTitlesData(show: false),
-        gridData: FlGridData(show: false),
       ),
+      swapAnimationDuration: const Duration(milliseconds: 500),
+      swapAnimationCurve: Curves.easeOutCubic,
     );
   }
 }
@@ -142,11 +204,19 @@ class _StatCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 28),
+              Icon(icon, color: color, size: 30),
               const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                value,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
-              Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+              Text(
+                title,
+                style:
+                TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -154,7 +224,3 @@ class _StatCard extends StatelessWidget {
     );
   }
 }
-
-
-
-

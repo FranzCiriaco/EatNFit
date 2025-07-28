@@ -15,14 +15,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final Color primaryBlue = const Color(0xFF1A73E8);
 
-  void _onBottomNavTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  final List<String> quotes = [
+    "Your body can stand almost anything. It’s your mind you have to convince.",
+    "Push yourself, because no one else is going to do it for you.",
+    "The secret of getting ahead is getting started.",
+  ];
 
-    if (index == 1) {
-      Navigator.pushNamed(context, '/progress');
-    }
+  String getDailyQuote() {
+    final today = DateTime.now().day;
+    return quotes[today % quotes.length];
+  }
+
+  void _onBottomNavTapped(int index) {
+    setState(() => _selectedIndex = index);
+    if (index == 1) Navigator.pushNamed(context, '/progress');
   }
 
   @override
@@ -38,6 +44,14 @@ class _DashboardPageState extends State<DashboardPage> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: CircleAvatar(
+              backgroundImage: AssetImage('assets/avatar.png'),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -60,15 +74,18 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        "Here’s your wellness summary for today.",
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      Text(
+                        getDailyQuote(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black54,
+                        ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
 
                       /// Health Cards
                       buildCard(
-                        context,
                         icon: "🍏",
                         title: "1,250 kcal left",
                         subtitle: kcalSub,
@@ -77,7 +94,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       const SizedBox(height: 16),
                       buildCard(
-                        context,
                         icon: "👣",
                         title: "Steps Today",
                         subtitle: stepsSub,
@@ -86,7 +102,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       const SizedBox(height: 16),
                       buildCard(
-                        context,
                         icon: "💧",
                         title: "Water Intake",
                         subtitle: waterSub,
@@ -110,6 +125,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         label: "Add Exercise",
                         onPressed: () =>
                             Navigator.pushNamed(context, '/exercise'),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      /// Health Tip
+                      const Text(
+                        "💡 Health Tip: Drink a glass of water when you wake up to kickstart your metabolism.",
+                        style: TextStyle(fontSize: 16, color: Colors.black87),
                       ),
 
                       const Spacer(),
@@ -142,12 +165,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget buildCard(
-    BuildContext context, {
+  Widget buildCard({
     required String icon,
     required String title,
     required String subtitle,
-    required Function(String) onUpdateSubtitle,
+    required ValueChanged<String> onUpdateSubtitle,
   }) {
     return GestureDetector(
       onTap: () => _showEditDialog(context, title, subtitle, onUpdateSubtitle),
@@ -206,43 +228,38 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _showEditDialog(
-    BuildContext context,
-    String title,
-    String subtitle,
-    Function(String) onUpdateSubtitle,
-  ) {
+      BuildContext context,
+      String title,
+      String subtitle,
+      ValueChanged<String> onUpdateSubtitle,
+      ) {
     final subtitleController = TextEditingController(text: subtitle);
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Edit Info"),
-          content: TextField(
-            controller: subtitleController,
-            decoration: const InputDecoration(labelText: "Subtitle"),
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Info"),
+        content: TextField(
+          controller: subtitleController,
+          decoration: const InputDecoration(labelText: "Subtitle"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                onUpdateSubtitle(subtitleController.text);
-                Navigator.pop(context);
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
+          ElevatedButton(
+            onPressed: () {
+              onUpdateSubtitle(subtitleController.text);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Updated successfully!")),
+              );
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
     );
   }
 }
-
-
-
-
-
-
